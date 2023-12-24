@@ -1,8 +1,8 @@
 package main
 
-import "calculation-service/api"
+import "calculation-service/internal/api"
 
 func main() {
-	calculationServer := api.NewAPIServer(":5000")
+	calculationServer := api.NewAPIServer(":4000")
 	calculationServer.Run()
 }
