@@ -1,9 +1,6 @@
 package calculation
 
-import (
-	"log"
-	"sync"
-)
+import "fmt"
 
 type CalculationRequest struct {
 	Items        []map[string]interface{} `json:"items"`
@@ -16,30 +13,17 @@ type CalculationResponse struct {
 }
 
 func CalculateTotal(req CalculationRequest) (float64, error) {
-	results := make(chan float64, len(req.Items))
-	var wg sync.WaitGroup
-
-	for _, item := range req.Items {
-		wg.Add(1)
-		go func(item map[string]interface{}) {
-			defer wg.Done()
-			price, ok := item["price"].(float64)
-			if !ok {
-				log.Println("item does not have a valid price")
-				return
-			}
-			results <- price
-		}(item)
-	}
-
-	go func() {
-		wg.Wait()
-		close(results)
-	}()
-
+	//start := time.Now()
 	total := 0.0
-	for price := range results {
+	for _, i := range req.Items {
+		price, ok := i["price"].(float64)
+		if !ok {
+			return 0, fmt.Errorf("price is not a float64")
+		}
 		total += price
+		//log.Println("index: ", index)
 	}
+
+	//log.Println("Total time using for loop:  ", time.Since(start))
 	return total, nil
 }
