@@ -9,10 +9,11 @@ func TestCalculateTotal(t *testing.T) {
 		want    float64
 		wantErr bool
 	}{
-		"simple":        {input: CalculationRequest{Items: []map[string]interface{}{{"price": 10.0}, {"price": 20.0}, {"price": 30.0}}}, want: 60.0},
-		"int":           {input: CalculationRequest{Items: []map[string]interface{}{{"price": 10}, {"price": 20}, {"price": 30}}}, wantErr: true},
-		"invalid price": {input: CalculationRequest{Items: []map[string]interface{}{{"price": "invalid"}}}, wantErr: true},
-		"empty":         {input: CalculationRequest{Items: []map[string]interface{}{}}, want: 0.0},
+		"different objects": {input: CalculationRequest{Items: []map[string]interface{}{{"Car": map[string]interface{}{"Make": "Toyota", "Model": "Camry", "Year": 2022, "price": 10.0, "qty": 1.0}}, {"Products": map[string]interface{}{"Name": "Vegetables", "ItemCode": "TEST101", "price": 20.0, "qty": 3.0}}}}, want: 70.0},
+		"simple":            {input: CalculationRequest{Items: []map[string]interface{}{{"Car": map[string]interface{}{"Make": "Toyota", "Model": "Camry", "Year": 2022, "price": 10.0, "qty": 1.0}}, {"Car": map[string]interface{}{"Make": "Honda", "Model": "Civic", "Year": 2023, "price": 20.0, "qty": 1.0}}}}, want: 30.0},
+		"int":               {input: CalculationRequest{Items: []map[string]interface{}{{"Car": map[string]interface{}{"Make": "Toyota", "Model": "Camry", "Year": 2022, "price": 10, "qty": 1.0}}, {"Car": map[string]interface{}{"Make": "Honda", "Model": "Civic", "Year": 2023, "price": 20, "qty": 1}}}}, wantErr: true},
+		"invalid price":     {input: CalculationRequest{Items: []map[string]interface{}{{"Car": map[string]interface{}{"Make": "Toyota", "Model": "Camry", "Year": 2022, "price": "String", "qty": 1.0}}, {"Car": map[string]interface{}{"Make": "Honda", "Model": "Civic", "Year": 2023, "price": "string", "qty": 1.0}}}}, wantErr: true},
+		"empty":             {input: CalculationRequest{Items: []map[string]interface{}{{"Car": map[string]interface{}{"Make": "Toyota", "Model": "Camry", "Year": 2022}}, {"Car": map[string]interface{}{"Make": "Honda", "Model": "Civic", "Year": 2023}}}}, wantErr: true},
 	}
 
 	for name, tc := range tests {

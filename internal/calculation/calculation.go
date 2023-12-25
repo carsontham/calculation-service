@@ -13,17 +13,35 @@ type CalculationResponse struct {
 }
 
 func CalculateTotal(req CalculationRequest) (float64, error) {
-	//start := time.Now()
 	total := 0.0
-	for _, i := range req.Items {
-		price, ok := i["price"].(float64)
-		if !ok {
-			return 0, fmt.Errorf("price is not a float64")
+
+	for _, item := range req.Items {
+		for key, value := range item {
+			itemData, ok := value.(map[string]interface{})
+			if !ok {
+				return 0, fmt.Errorf("item does not contain valid data")
+			}
+
+			price, ok := itemData["price"].(float64)
+			if !ok {
+				return 0, fmt.Errorf("item data does not contain a valid price")
+			}
+
+			qty, ok := itemData["qty"].(float64)
+			if !ok {
+				return 0, fmt.Errorf("item data does not contain a valid qty")
+			}
+
+			// Calculate total for the current item
+			itemTotal := price * qty
+
+			// Add to the overall total
+			total += itemTotal
+
+			// Print the variable name (e.g., "Car")
+			fmt.Println("Variable Name:", key)
 		}
-		total += price
-		//log.Println("index: ", index)
 	}
 
-	//log.Println("Total time using for loop:  ", time.Since(start))
 	return total, nil
 }
