@@ -3,10 +3,10 @@ package api
 import (
 	"calculation-service/internal/middleware"
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 )
 
 type APIServer struct {
@@ -24,11 +24,14 @@ func NewAPIServer(listenAddr string) *APIServer {
 }
 
 func (s *APIServer) Run() {
+	logger := middleware.NewZapLogger()
+
 	s.router.Use(middleware.LoggingMiddleware)
 	s.SetupRoutes()
 
-	log.Println("JSON API server running on port:", s.listenAddr)
-	log.Fatal(http.ListenAndServe(s.listenAddr, s.router))
+	logger.Info("calculation-server running... ", zap.String("port", s.listenAddr))
+	//log.Println("JSON API server running on port:", s.listenAddr)
+	http.ListenAndServe(s.listenAddr, s.router)
 }
 
 func makeHTTPHandleFunc(f apiFunc) http.HandlerFunc {
