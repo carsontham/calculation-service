@@ -80,6 +80,7 @@ func GetBestVoucher(req DiscountRequest) (DiscountResponse, error) {
 
 	if err != nil {
 		logger.Error("error calculating net price", zap.Error(err))
+
 		return DiscountResponse{}, err
 	}
 

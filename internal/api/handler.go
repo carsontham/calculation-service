@@ -2,9 +2,9 @@ package api
 
 import (
 	"calculation-service/internal/calculation"
+	"calculation-service/internal/errors"
 	"calculation-service/internal/middleware"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"go.uber.org/zap"
@@ -21,13 +21,13 @@ func (s *APIServer) calculationHandler(w http.ResponseWriter, r *http.Request) e
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.Error("error decoding request body", zap.Error(err))
 
-		return WriteJSON(w, http.StatusBadRequest, err)
+		return WriteJSON(w, http.StatusBadRequest, errors.NewErrorResponse("decoding error", err.Error(), http.StatusBadRequest))
 	}
 	// Calculate the total from the request.
 	total, err := calculation.CalculateTotal(req)
 	if err != nil {
 		logger.Error("error calculating total", zap.Error(err))
-		return WriteJSON(w, http.StatusBadRequest, err)
+		return WriteJSON(w, http.StatusBadRequest, errors.NewErrorResponse("Bad Request", err.Error(), http.StatusBadRequest))
 	}
 
 	// Return the total in a JSON response.
@@ -46,7 +46,7 @@ func (s *APIServer) discountHandler(w http.ResponseWriter, r *http.Request) erro
 	var req calculation.DiscountRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.Error("error decoding request body", zap.Error(err))
-		return WriteJSON(w, http.StatusBadRequest, err)
+		return WriteJSON(w, http.StatusBadRequest, errors.NewErrorResponse("decoding error", err.Error(), http.StatusBadRequest))
 	}
 
 	// Assert the types of the values in the vouchers
@@ -54,17 +54,18 @@ func (s *APIServer) discountHandler(w http.ResponseWriter, r *http.Request) erro
 		_, ok := voucher["isPercentage"].(bool)
 		if !ok {
 			logger.Warn("the request input is invalid")
-			return WriteJSON(w, http.StatusBadRequest, fmt.Errorf("the request input is invalid"))
+			return WriteJSON(w, http.StatusBadRequest, errors.NewErrorResponse("Bad Request", "the request input is invalid", http.StatusBadRequest))
 		}
 		_, ok = voucher["value"].(float64)
 		if !ok {
 			logger.Warn("the request input is invalid")
-			return WriteJSON(w, http.StatusBadRequest, fmt.Errorf("the request input is invalid"))
+			return WriteJSON(w, http.StatusBadRequest, errors.NewErrorResponse("Bad Request", "the request input is invalid", http.StatusBadRequest))
 		}
 		_, ok = voucher["code"].(string)
 		if !ok {
 			logger.Warn("the request input is invalid")
-			return WriteJSON(w, http.StatusBadRequest, fmt.Errorf("the request input is invalid"))
+			return WriteJSON(w, http.StatusBadRequest, errors.NewErrorResponse("Bad Request", "the request input is invalid", http.StatusBadRequest))
+
 		}
 	}
 	logger.Info("request input is valid")
@@ -72,7 +73,7 @@ func (s *APIServer) discountHandler(w http.ResponseWriter, r *http.Request) erro
 	res, err := calculation.GetBestVoucher(req)
 	if err != nil {
 		logger.Error("error calculating total", zap.Error(err))
-		return WriteJSON(w, http.StatusBadRequest, err)
+		return WriteJSON(w, http.StatusBadRequest, errors.NewErrorResponse("Bad Request", err.Error(), http.StatusBadRequest))
 	}
 
 	logger.Info("calculate total complete")
