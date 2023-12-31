@@ -4,8 +4,8 @@ import (
 	"calculation-service/internal/middleware"
 	"errors"
 	"fmt"
-	"log"
-	"time"
+
+	"go.uber.org/zap"
 )
 
 type CalculationRequest struct {
@@ -31,22 +31,25 @@ type DiscountResponse struct {
 
 func CalculateTotal(req CalculationRequest) (float64, error) {
 	logger := middleware.NewZapLogger()
-	logger.Info("In CalculateTotal")
+	logger.Info("in CalculateTotal")
 	total := 0.0
 	for _, item := range req.Items {
-		for key, value := range item {
+		for _, value := range item {
 			itemData, ok := value.(map[string]interface{})
 			if !ok {
+				logger.Warn("item does not contain valid data")
 				return 0, fmt.Errorf("item does not contain valid data")
 			}
 
 			price, ok := itemData["price"].(float64)
 			if !ok {
+				logger.Warn("item does not contain valid data")
 				return 0, fmt.Errorf("item data does not contain a valid price")
 			}
 
 			qty, ok := itemData["qty"].(float64)
 			if !ok {
+				logger.Warn("item does not contain valid data")
 				return 0, fmt.Errorf("item data does not contain a valid qty")
 			}
 
@@ -56,19 +59,19 @@ func CalculateTotal(req CalculationRequest) (float64, error) {
 			// Add to the overall total
 			total += itemTotal
 
-			// Print the variable name (e.g., "Car")
-			fmt.Println("Variable Name:", key)
 		}
 	}
-
+	logger.Info("returning total calculated..")
 	return total, nil
 }
 
 func GetBestVoucher(req DiscountRequest) (DiscountResponse, error) {
-	start := time.Now()
+	logger := middleware.NewZapLogger()
+
 	vouchers := req.Vouchers
 	total := req.TotalPrice
 	if len(req.Vouchers) == 0 {
+		logger.Warn("no vouchers provided")
 		return DiscountResponse{}, errors.New("no vouchers provided")
 	}
 
@@ -76,15 +79,15 @@ func GetBestVoucher(req DiscountRequest) (DiscountResponse, error) {
 	minNetPrice, err := calculateNetPrice(total, bestVoucher)
 
 	if err != nil {
+		logger.Error("error calculating net price", zap.Error(err))
 		return DiscountResponse{}, err
 	}
 
-	for i, voucher := range vouchers[1:] {
-
-		log.Println("entered loop", i)
+	for _, voucher := range vouchers[1:] {
 		netPrice, err := calculateNetPrice(total, voucher)
 
 		if err != nil {
+			logger.Error("error calculating net price", zap.Error(err))
 			return DiscountResponse{}, err
 		}
 
@@ -95,7 +98,7 @@ func GetBestVoucher(req DiscountRequest) (DiscountResponse, error) {
 	}
 
 	amtSaved := req.TotalPrice - minNetPrice
-	log.Println("time taken", time.Since(start))
+	logger.Info("returning best voucher")
 	return DiscountResponse{
 		VoucherCode:   bestVoucher["code"].(string),
 		NewTotalPrice: minNetPrice,
@@ -103,10 +106,12 @@ func GetBestVoucher(req DiscountRequest) (DiscountResponse, error) {
 }
 
 func calculateNetPrice(total float64, voucher map[string]interface{}) (float64, error) {
-	log.Println("entered calculateNetPrice()")
+	logger := middleware.NewZapLogger()
+	logger.Info("in calculateNetPrice")
 	if voucher["isPercentage"].(bool) {
+		logger.Info("voucher is percentage based")
 		return total - total*(voucher["value"].(float64)/100), nil
 	}
-	log.Println("here", total, voucher["value"].(float64), voucher["code"].(string))
+	logger.Info("voucher is value based")
 	return total - voucher["value"].(float64), nil
 }
