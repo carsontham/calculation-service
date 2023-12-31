@@ -1,5 +1,5 @@
 IMAGE_NAME := calculation-service
-# CONTAINER_NAME := savingsquadsbackend-container
+CONTAINER_NAME := calculation-svc-container
 
 build:
 	@go build -o bin/$(IMAGE_NAME) ./cmd/server
@@ -11,7 +11,7 @@ docker-build:
 	docker build -t $(IMAGE_NAME) .
 
 docker-run: docker-build
-	docker run -p 3000:3000 --name $(CONTAINER_NAME) $(IMAGE_NAME)
+	docker run -p 4000:4000 --name $(CONTAINER_NAME) $(IMAGE_NAME)
 
 docker-stop:
 	docker stop $(CONTAINER_NAME)
